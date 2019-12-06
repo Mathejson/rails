@@ -69,6 +69,7 @@ module Rails
         @autoloader                              = :classic
         @disable_sandbox                         = false
         @add_autoload_paths_to_load_path         = true
+        @feature_policy                          = nil
       end
 
       # Loads default configurations. See {the result of the method for each version}[https://guides.rubyonrails.org/configuring.html#results-of-config-load-defaults].
@@ -151,6 +152,16 @@ module Rails
 
           if respond_to?(:active_record)
             active_record.collection_cache_versioning = true
+          end
+        when "6.0"
+          load_defaults "6.0"
+
+          if respond_to?(:active_record)
+            active_record.has_many_inversing = true
+          end
+
+          if respond_to?(:active_storage)
+            active_storage.track_variants = true
           end
         else
           raise "Unknown version #{target_version.to_s.inspect}"
@@ -299,6 +310,14 @@ module Rails
           @content_security_policy = ActionDispatch::ContentSecurityPolicy.new(&block)
         else
           @content_security_policy
+        end
+      end
+
+      def feature_policy(&block)
+        if block_given?
+          @feature_policy = ActionDispatch::FeaturePolicy.new(&block)
+        else
+          @feature_policy
         end
       end
 
